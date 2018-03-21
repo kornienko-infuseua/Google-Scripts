@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <style>
+      .selectDate {
+        margin-top:10px;
+      }
+       
+      .button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+     
+    </style>
+  </head>
+  <body>
+    
+    Date to report: <p>
+    
+    <select id="SelectDay"> </select>
+    <select id="SelectMonth"> </select>
+    <select id="SelectYear"> </select>
+    <p> <input type="checkbox" id="checkBoxWholeMonth" name="WholeMonth" value="SelectWholeMonth" onchange="disable()"> Whole Month from Selected Sheet </p>
+    <p> <input type="checkbox" id="checkRejectionRate" name="RejectionRate" value="CheckRejectionRate?"checked = "true"> Check rejection rate </p>
+     <p> <button id="ok" onclick="OkButton()">OK</button></p>
+
+    <script>
+
+   // var select = document.getElementById("SelectDay");
+   var x = document.getElementById("SelectDay");
+   for (var i=1;i<=31;i++){
+       var option = document.createElement("option");
+       option.text = i;
+       option.value = i>9? i:'0'+i ;
+        option.id = "d"+i;
+       x.add(option);
+    }
+    var x = document.getElementById("SelectMonth");
+    var months = ["January","February","March","April","May","June","July","August","September","October","November","December" ];
+    for (var i = 1;i<=12 ;i++ )
+    {
+        var option = document.createElement("option");
+        option.text = months[i-1];
+        option.value= i>12? i:'0'+i;
+        option.id = "m"+i;
+        x.add(option);
+        
+    }
+    var x = document.getElementById("SelectYear");
+    var years = ["2016","2017","2018","2019","2020"];
+    for (var i=0;i<years.length;i++)
+    {
+        var option = document.createElement("option");
+        option.text = years[i];
+        option.value= years[i];
+         option.id = "y"+ years[i];
+        x.add(option);
+    }
+     var currentDate  = new Date();
+     var currentDay   = currentDate.getDate();
+     var currentMonth = currentDate.getMonth();
+     var currentYear = currentDate.getFullYear();
+     var m = document.getElementById('m' + (currentMonth + 1));
+     m.selected = true;
+     var d = document.getElementById('d' + currentDay);
+     d.selected = true;
+     var y = document.getElementById('y' + currentYear);
+     y.selected = true;
+
+		function disable() {
+				if ($("#SelectDay").attr("disabled") == "disabled") {
+                    $("#SelectDay").removeAttr("disabled", "disabled");
+                    $("#SelectMonth").removeAttr("disabled", "disabled");
+                    $("#SelectYear").removeAttr("disabled", "disabled");
+ 
+				} else {
+                    $("#SelectDay").attr("disabled", "disabled");
+                    $("#SelectMonth").attr("disabled", "disabled");
+                    $("#SelectYear").attr("disabled", "disabled");
+				}
+			}    
+
+     function OkButton()
+     {
+      // Browser.msgBox("fdsfs");
+       var day = document.getElementById("SelectDay");
+       var DaySelected = day.options[day.selectedIndex].value;
+       var month = document.getElementById("SelectMonth");
+       var MonthSelected = month.options[month.selectedIndex].value;
+       var year = document.getElementById("SelectYear");
+       var YearSelected = year.options[year.selectedIndex].value;
+        var dateToScript =  MonthSelected + "."+DaySelected +  "." +YearSelected;
+      // alert( DaySelected);
+      // alert(dateToScript);
+       var isWholeMonth= document.getElementById("checkBoxWholeMonth").checked;
+       var checkRejectionRate= document.getElementById("checkRejectionRate").checked;
+         google.script.run.useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth,checkRejectionRate );
+         google.script.host.close();
+           
+     }
+     </script>
+  </body>
+</html>
+
+
