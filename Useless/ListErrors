@@ -1,0 +1,129 @@
+
+  function onOpen2 ()
+  {
+  SpreadsheetApp.getUi()
+        .createMenu('MyMenu')
+        .addItem('Delete useless Errors', 'deleteErrors')
+        .addToUi();
+  //SpreadsheetApp.getUi().createMenu("SCript Test").addItem("test", "someTest").addToUi();
+     PropertiesService.getScriptProperties().setProperty('currentDate', generateCurrentDate());
+
+    
+
+  }
+ function someTest(){
+ //var sheet = SpreadsheetApp.getActiveSheet();
+ //var range = sheet.getRange(6, 4, sheet.getLastRow() , 1)
+ //var values = range.getValues();
+  //for (var i =0; i< values.length; i++)
+ //{
+   //  if (values[i][0] .indexOf("Revenue")!=-1 && values[i][0].indexOf("added") !=-1){
+    //   Browser.msgBox((i+6)); break; }
+// }
+ }
+ function deleteErrors()
+ {
+ var Errors = ["Employees Prooflink is added","Employees Prooflink is added","Title color is yellow, but Prooflink is empty"];
+ try {
+     var sheet = SpreadsheetApp.getActiveSheet();
+     var row = getActiveRow()
+     
+     for (var i=row; i< sheet.getLastRow(); i++)
+     {
+         var curCellRange = sheet.getRange(i,4);
+         var curCellValue = curCellRange.getValue();
+           //   Browser.msgBox(curCellValue)
+
+         if (Errors.indexOf(curCellValue.toString()) !=1) {
+         //Browser.msgBox(curCellValue)
+             sheet.deleteRow(i);
+             
+             }
+     }
+     
+     } catch (err) {Browser.msgBox(err)};
+ }
+ function getActiveRow() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet();
+  var activeRow = sheet.getActiveCell().getRow();
+
+  return activeRow;
+}
+function onEdit2(e)
+{
+  var rowColumn = 5, updateColumn =7, dateColumn =8, commentColumn = 9;
+  currentDate = PropertiesService.getScriptProperties().getProperty('currentDate') ;
+
+ var ss = SpreadsheetApp.getActiveSpreadsheet();
+ var currentSheet = ss.getActiveSheet();
+var nameOfSheet = currentSheet.getName();
+ if (nameOfSheet=="Alexey K." || nameOfSheet=="Dima R." || nameOfSheet == "Dennis G.")
+ {
+  
+   var range = e.range;   
+   
+  for (var i=0 ; i<= range.getLastRow() - range.getRow() ;i++)
+  {
+     var row = range.getRow()+ i; 
+      var column = range.getColumn();
+     if (column==updateColumn) 
+     {
+         var updateRange = currentSheet.getRange(row, updateColumn , 1, 1);
+         updateValue = updateRange.getValue();
+         if (!updateValue) return;
+         var dateR = currentSheet.getRange(row, dateColumn, 1, 1);
+        
+         if (updateValue == 'cc')updateRange.setValue("Company_Upd"); 
+         else if( updateValue== 'cr')updateRange.setValue("Company_Rej");
+         else if( updateValue== 'q')updateRange.setValue("LeadInfo_Upd");
+         else if( updateValue== 'qq')updateRange.setValue("LeadInfo_Rej");
+         dateR.setValue(currentDate);
+     
+         var rowColumnRange = currentSheet.getRange(row+1, rowColumn, 1,1);
+         if (rowColumnRange.getValue() == currentSheet.getRange(row, rowColumn, 1,1).getValue())
+            { currentSheet.getRange(row+1, updateColumn, 1,1).setValue("Company_Upd");
+              currentSheet.getRange(row+1, dateColumn, 1,1).setValue(currentDate);
+            }
+     }
+     
+   else if(column ==commentColumn )
+   {
+       
+     var commentR = currentSheet.getRange(row, commentColumn, 1,1);
+     var commentValue = commentR.getValue();
+     if (commentValue == "V" || commentValue =="***") 
+     {
+     
+        currentSheet.getRange(row, updateColumn, 1,1).setValue("Company_Upd");
+        currentSheet.getRange(row, column-1, 1,1).setValue(currentDate);
+         
+        var rowColumnRange = currentSheet.getRange(row+1, column-4, 1,1);
+        if (rowColumnRange.getValue() == currentSheet.getRange(row, column-4, 1,1).getValue())
+             { currentSheet.getRange(row+1, updateColumn, 1,1).setValue("Company_Upd");
+               currentSheet.getRange(row+1,dateColumn, 1,1).setValue(currentDate);
+             }
+      }
+   }
+   }
+    
+}
+}
+
+function generateCurrentDate() {
+
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth() + 1; 
+    var yyyy = today.getFullYear();
+
+    if (dd < 10) {
+        dd = '0' + dd
+    }
+
+    if (mm < 10) {
+        mm = '0' + mm
+    }
+
+    today = mm + '/' + dd + '/' + yyyy;
+    return today
+}
