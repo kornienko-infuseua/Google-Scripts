@@ -5,6 +5,7 @@ function onOpen() {
         .addItem('sort', 'sortSymbols')
         .addToUi();
 }
+//some changes 111111
 function sortSymbols()
 {
     var symSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Symbols");
