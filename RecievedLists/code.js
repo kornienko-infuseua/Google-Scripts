@@ -111,9 +111,10 @@ function cleanTheList(linkList) {
             
         }
     }
-    if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes; return mistakes}
+    try{
+    if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes!=""? mistakes:""; return mistakes}
     else if (mistakes!= ""){return "missing "+ mistakes; }
-
+}catch (err) {Browser.msgBox("ERRRRRRRRRRRRROR " + err)}
     var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
     
     for (var i = 1; i < lastRow; i++) {
@@ -123,10 +124,13 @@ function cleanTheList(linkList) {
         
         else if (bgColors[i][newColumnNames['title']] != "#ffffff") { isUnCheckedList = false; break; }
     }
-    if (isUnCheckedList)
-        return false;
     range.setValues(values);
-
+    if (isUnCheckedList){
+   // Browser.msgBox("false")
+    
+        return false;
+    
+}
 
     return true;
 }
@@ -182,11 +186,12 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
         var rowsToScript =  getRowsToScript(data,isWholeMonth, dateToScript)
         var dateColumn = 0, commentColumn= 5, amountOfLeadsColumn = 2, linkColumn = 4, statusColumn = 7, dateSciptColumn = 8, scriptColumn = 9, readColumn = 10;
 
+try{
         for (row in rowsToScript)
         {
          
               var currentRow = rowsToScript[row];
-              data[currentRow][readColumn] = "read";
+              //ddata[currentRow][readColumn] = "read";
               //wholeTable.setValues(data);
              var result = cleanTheList(data[currentRow][linkColumn]);
             if (result == true) {
@@ -196,7 +201,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
                  if (checkRejectionRate) getRejectionRate(data[currentRow][linkColumn].toString(),data[currentRow][dateColumn].toString());
                 
                 }
-            else if (result == false) data[currentRow][commentColumn] =  "unChecked" ;
+            else if (result == false) data[currentRow][commentColumn] = isWholeMonth? "UNChecked":"unChecked" ;
             else  data[currentRow][scriptColumn] =  result ;
             
              wholeTable.setValues(data)
@@ -205,6 +210,9 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
        
     
     }
+    
+    }
+    catch (err) {Browser.msgBox("in cycle + "+ err)}
         //wholeTable.setValues(data);
 
         
@@ -214,7 +222,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
     
     
     else Browser.msgBox(nameOfSheet + " is missing");
-  //Browser.msgBox("Script is Done");
+  Browser.msgBox("Script is Done");
 }
 function getRowsToScript(data, isWholeMonth, dateToScript)
 {
@@ -244,7 +252,8 @@ function getRowsToScript(data, isWholeMonth, dateToScript)
           
           for (var i = 0; i < data.length; i++) {
               //if (count>100) break;
-              if (data[i][scriptColumn] == "done" || data[i][linkColumn] == 0) continue;
+              if (data[i][commentColumn] == "UNChecked") continue;
+              if (data[i][scriptColumn] != "" || data[i][linkColumn] == 0 ) continue;
               if (data[i][commentColumn].toString().toLowerCase()== "no db") continue;
               masRows.push(i);  
              // count++;
@@ -257,7 +266,7 @@ function getRowsToScript(data, isWholeMonth, dateToScript)
 function getRejectionRate(link,date)
 {
 try {
-    var rejSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1rYysrmVoO4bT9h7lgeyZXr8oAGbc9jLqsyxnzCINSg8/edit#gid=0").getSheets()[0];
+    var rejSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/13vyGSPKDGfFJiw_tc8ahnGxM2T6GiIXpfZLjZJm6UNI/edit#gid=0").getSheets()[0];
     var sh = SpreadsheetApp.openByUrl(link);
    
     var curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
