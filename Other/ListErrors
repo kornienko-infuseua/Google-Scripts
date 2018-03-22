@@ -1,6 +1,6 @@
 
   function onOpen2 ()
-  {
+  {//some test111111;
   SpreadsheetApp.getUi()
         .createMenu('MyMenu')
         .addItem('Delete useless Errors', 'deleteErrors')
