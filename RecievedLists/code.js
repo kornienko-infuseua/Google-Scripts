@@ -66,7 +66,7 @@ function cleanTheList(linkList) {
 
     if (countRows != 0) currentList.deleteRows(lastRow + 1, maxRows - lastRow); //delete empty rows;
 
-    var columnNames = ["first_name", "last_name", "company", "title", "email", "address", "city", "state", "zip", "country", "phone", "prooflink", "employees", "employees_prooflink", "revenue", "revenue_prooflink"];
+    var columnNames = ["first_name", "last_name", "company", "title", "email", "address", "city", "state", "zip", "country", "phone", "prooflink", "employees", "employees_prooflink", "revenue", "revenue_prooflink","pv_comment"];
     var newColumnNames = [];
     var mistakes = getMissingColumns(currentList, columnNames, newColumnNames)
 
