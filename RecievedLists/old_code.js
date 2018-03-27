@@ -11,7 +11,6 @@ function onEdit(e){
     var sheet = SpreadsheetApp.getActiveSheet();
     if (range.getColumn() == 8 && range.getValue() == "done")
     {
-        
         sheet.getRange(range.getRow(), range.getColumn()).setValue("Done");
     }
 }
@@ -19,20 +18,49 @@ function createDialog() {
 
     var htmlDialog = HtmlService.createHtmlOutputFromFile("scriptHTML")
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-        .setHeight(180)
+        .setHeight(200)
         .setWidth(270);
     SpreadsheetApp.getUi().showModalDialog(htmlDialog, "Select Date");
 }
-function cleanTheList(linkList) {
-//Browser.msgBox(linkList);
-var currentList;
-  try {currentList   = SpreadsheetApp.openByUrl(linkList).getSheets()[0]; }
-catch (e) {return "no permission"; }
+function getMissingColumns(sheet, columnNames, newColumnNames)
+{
+try{
+    var range = sheet.getRange(1, 1, 1, sheet.getLastColumn());
+    var values = range.getValues();
 
-    //var currentList = SpreadsheetApp.openByUrl(linkList).getSheets()[0];
-   // Browser.msgBox(currentList.getName());
-   // try { currentList.appendRow(["11/29/2017","12","http:://fsdf"]); }
-   // catch (e) {Browser.msgBox(e);}
+    for ( i in values[0] )
+        values[0][i] = replaceSpaces(values[0][i])
+    for (column in columnNames)
+    {
+         var index = values[0].indexOf( columnNames[column]); //UPDATE 28.11   !!!!!!!!!!!!!!!!!!!!!!!
+         if (index!= -1 ) {
+             newColumnNames[columnNames[column]] = index;
+             }
+         else newColumnNames[columnNames[column]] = columnNames[column];
+       
+     }   
+   
+     
+     
+      var mistakes_test = "";
+     for (column in columnNames)
+     {
+         if (typeof(newColumnNames[columnNames[column]] ) != 'number')
+            mistakes_test+=newColumnNames[columnNames[column]] + "; "
+     }
+     range.setValues(values);
+
+} catch (err) {Browser.msgBox(err)}
+
+    return mistakes_test;
+}
+function cleanTheList(linkList) {
+
+  var currentList;
+  try {currentList   = SpreadsheetApp.openByUrl(linkList).getSheets()[0]; }
+  catch (e) {return "no permission"; }
+
+try {
     var lastColumn = currentList.getLastColumn();
     var lastRow = currentList.getLastRow();
     var range = currentList.getRange(1, 1, lastRow, lastColumn);
@@ -40,151 +68,77 @@ catch (e) {return "no permission"; }
     var maxRows = currentList.getMaxRows();
     var countRows = maxRows - lastRow;
     
-     
-  
-  
-       
-       
     if (countRows != 0) currentList.deleteRows(lastRow + 1, maxRows - lastRow); //delete empty rows;
-
-     var columnNames = ["first_name","last_name","company","title","email","address","city","state","zip","country","phone","prooflink","employees","employees_prooflink","revenue","revenue_prooflink"]; // UPDATE 28.11   !!!!!!!!!!!!!!!!!!!!!!!!!!
-     
-    var first_name, last_name, company, title, email, address, city, state, zip, coutry, phone, prooflink, employees, employees_prooflink, revenue, revenue_prooflink;
-    for (var i = 0; i < lastColumn; i++) {
-        values[0][i] = values[0][i].toString().toLowerCase();
-        values[0][i] = values[0][i].replace(/^\s*/, '').replace(/\s*$/, '');
-
-
-        var index = columnNames.indexOf( values[0][i] ); //UPDATE 28.11   !!!!!!!!!!!!!!!!!!!!!!!
-       if (index!= -1 ) columnNames[index] = i;
-       
-        switch (values[0][i]) {
-            case "first_name": first_name = i;
-                break;
-            case "last_name": last_name = i;
-                break;
-            case "company": company = i;
-                break;
-            case "title": title = i;
-                break;
-            case "email": email = i;
-                break;
-            case "address": address = i;
-                break;
-            case "city": city = i;
-                break;
-            case "state": state = i;
-                break;
-            case "zip": zip = i;
-                break;
-            case "country": coutry = i;
-                break;
-            case "phone": phone = i;
-                break;
-            case "prooflink": prooflink = i;
-                break;
-            case "employees": employees = i;
-                break;
-            case "employees_prooflink": employees_prooflink = i;
-                break;
-            case "revenue": revenue = i;
-                break;
-            case "revenue_prooflink": revenue_prooflink = i;
-                break;
-
-            //default : values[0][i] = values[0][i];  
-        }
-    }
-    range.setValues(values);
     
-      //var bgColors = range.getBackgrounds(); TEST TEST
-     //var weghts = range.getFontWeights();
-    // var fontColors = range.getFontColors();
-     
-     //  for (var i =0 ;i< lastRow;i++)
-   //  Browser.msgBox(weghts[i][1]);
-     
-// check column names 
-    var mistakes = "";
+    var columnNames = ["first_name","last_name","company","title","email","address","city","state","zip","country","phone","prooflink","employees","employees_prooflink","revenue","revenue_prooflink"];
+    var newColumnNames=[] ;
+    var mistakes =  getMissingColumns(currentList,columnNames,newColumnNames)
     
-    var mistakes_test = "";//UPDATE 28.11   !!!!!!!!!!!!!!!!!!!!!!!
-    for (var column in columnNames )
-    {
-        if ( typeof (column) == 'string' )
-           mistakes_test += column ;
-    }
-      //Browser.msgBox(mistakes);
-  // Browser.msgBox(columnNames);
-    
-    
-    if (first_name == undefined) mistakes += "missing first_name; "; 
-    if (!last_name) mistakes += "missing last_name; ";
-    if (!company) mistakes += "missing company; ";
-    if (!title) mistakes += "missing title; ";
-    if (!email) mistakes += "missing email; ";
-    if (!address) mistakes += "missing address; ";
-    if (!city) mistakes += "missing city; ";
-    if (!state) mistakes += "missing state; ";
-    if (!zip) mistakes += "missing zip; ";
-    if (!coutry) mistakes += "missing coutry; ";
-    if (!phone) mistakes += "missing phone; ";
-    if (!prooflink) mistakes += "missing prooflink; ";
-    if (!employees) mistakes += "missing employees; ";
-    if (!employees_prooflink) mistakes += "missing employees_prooflink; ";
-    if (!revenue) mistakes += "missing revenue; ";
-    if (!revenue_prooflink) mistakes += "missing revenue_prooflink; ";
-
      var bgColors = range.getBackgrounds();
      var weights = range.getFontWeights();
      var fontColors = range.getFontColors();
      
    var newEmail = false;
    var newEmailRows ="" ;
-   
-    for (var i = 1; i < lastRow; i++) {
 
-        if (prooflink != undefined) {
+    for (var i = 1; i < lastRow; i++) {
+  
+        var prooflink = newColumnNames['prooflink']
+
+        if (typeof prooflink == 'number' ) {
             var link_str = values[i][prooflink].toString();
             if (link_str.indexOf('linkedin') != -1)
                 values[i][prooflink] = link_str.split('?')[0];
         }
-        if (employees_prooflink != undefined) {
+         var employees_prooflink = newColumnNames['employees_prooflink']
+
+        if (typeof employees_prooflink == 'number') {
             link_str = values[i][employees_prooflink].toString();
             if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
-                values[i][employees_prooflink] = link_str.split('?')[0];
+                values[i][employees_prooflink]= link_str.split('?')[0];
         }
-        if (revenue_prooflink != undefined) {
+        
+        var revenue_prooflink =  newColumnNames['revenue_prooflink']
+        if (typeof revenue_prooflink == 'number') {
             link_str = values[i][revenue_prooflink].toString();
             if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
                 values[i][revenue_prooflink] = link_str.split('?')[0];
         }
-       if ( email && bgColors[0][email]!= "#f5bfb3" && bgColors[i][email] =="#ffff00" && fontColors[i][email]== "#ff0000" && weights[i][email]=="bold" )
+        var email = newColumnNames['email']
+       if ( typeof email== 'number' && bgColors[0][email]!= "#f5bfb3" && bgColors[i][email] =="#ffff00" && fontColors[i][email]== "#ff0000" && weights[i][email]=="bold" )
            {
             currentList.getRange(1, email+1).setBackground("#f5bfb3") ;
             newEmailRows += (i+1) +", ";
             
         }
     }
-    if (newEmailRows) mistakes = "New emails found: " + newEmailRows + mistakes;
-    
-    if (mistakes) return mistakes;
-
+    try{
+    if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes!=""? mistakes:""; return mistakes}
+    else if (mistakes!= ""){return "missing "+ mistakes; }
+}catch (err) {Browser.msgBox("ERRRRRRRRRRRRROR " + err)}
     var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
     
     for (var i = 1; i < lastRow; i++) {
-        if (bgColors[i][prooflink] != "#ffffff") { isUnCheckedList = false; break; }
-        else if (bgColors[i][phone] != "#ffffff") { isUnCheckedList = false; break; }
-        else if (bgColors[i][title] != "#ffffff") { isUnCheckedList = false; break; }
+        if (bgColors[i][newColumnNames['prooflink']] != "#ffffff") { isUnCheckedList = false; break; }
+
+        else if (bgColors[i][newColumnNames['phone']]!= "#ffffff") { isUnCheckedList = false; break; }
+        
+        else if (bgColors[i][newColumnNames['title']] != "#ffffff") { isUnCheckedList = false; break; }
     }
-    if (isUnCheckedList)
-        return false;
     range.setValues(values);
-
-
-    return true;
+    if (isUnCheckedList){
+   // Browser.msgBox("false")
+    
+        return false;
+    
 }
 
-function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth) {
+    return true;
+    
+    } catch (err) {return "exception: " + err }
+}
+
+function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth, checkRejectionRate) {
   
   
     var currentDate= (generateCurrentDate());
@@ -227,63 +181,102 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
   
          var countRows = stopPosition - startPosition -1 ;
          if (countRows <=0) { Browser.msgBox("No list with selected date"); return 0 ; }
-        // Browser.msgBox(countRows);
-       // Browser.msgBox("startPosition " + startPosition + " StopPosition "+ stopPosition);
+      
             
 
         var wholeTable = sheetToScript.getRange(startPosition+1, 1,countRows , lastColumn);
-        //Browser.msgBox(wholeTable.getNumRows());
         var data = wholeTable.getValues();
-        //Browser.msgBox(data.length);
-        // Browser.msgBox(data[895][1]);
+        var rowsToScript =  getRowsToScript(data,isWholeMonth, dateToScript)
         var dateColumn = 0, commentColumn= 5, amountOfLeadsColumn = 2, linkColumn = 4, statusColumn = 7, dateSciptColumn = 8, scriptColumn = 9, readColumn = 10;
-       // Browser.msgBox(dateToScript);
-        for (var i = 0; i < data.length; i++) {
-          // data[i][readColumn] = "read";
+
+try{
+        for (row in rowsToScript)
+        {
+         
+              var currentRow = rowsToScript[row];
+              //ddata[currentRow][readColumn] = "read";
+              //wholeTable.setValues(data);
+             var result = cleanTheList(data[currentRow][linkColumn]);
+            if (result == true || data[currentRow][scriptColumn].toString()=="ok") {
+                data[currentRow][scriptColumn] = "done"; 
+                data[currentRow][dateSciptColumn] = currentDate; 
+                
+                 if (checkRejectionRate) getRejectionRate(data[currentRow][linkColumn].toString(),data[currentRow][dateColumn].toString());
+                
+                }
+            else if (result == false) data[currentRow][commentColumn] = isWholeMonth? "UNChecked":"unChecked" ;
+            
+            else  data[currentRow][scriptColumn] =  result ;
+            
+             wholeTable.setValues(data)
+        
+
+       
+    
+    }
+    
+    }
+    catch (err) {Browser.msgBox("in cycle + "+ err)}
+        //wholeTable.setValues(data);
+
+        
+   
+    
+    }
+    
+    
+    else Browser.msgBox(nameOfSheet + " is missing");
+  //Browser.msgBox("Script is Done");
+}
+function getRowsToScript(data, isWholeMonth, dateToScript)
+{
+     var masRows = []
+     var dateColumn = 0, commentColumn= 5, amountOfLeadsColumn = 2, linkColumn = 4, statusColumn = 7, dateSciptColumn = 8, scriptColumn = 9, readColumn = 10;
+     if (!isWholeMonth)
+     {
+       for (var i = 0; i < data.length; i++) {
+          
          // Browser.msgBox(dateToScript + " "+ data[i][dateColumn]);
          
-            if (!isWholeMonth && data[i][dateColumn] != dateToScript) continue ;
+            if ( data[i][dateColumn] != dateToScript) continue ;
             if (data[i][scriptColumn] == "done" || data[i][linkColumn] == 0) continue;
             var status = data[i][statusColumn].toString().toLowerCase();
             var comment = data[i][commentColumn].toString().toLowerCase();
 
-            if ( data[i][amountOfLeadsColumn] > 50 && !isWholeMonth )
+            if ( data[i][amountOfLeadsColumn] > 50  )
                if ( (status != "done" && comment == "") || (comment != "platform" && status == "" ))  continue; 
             if (data[i][commentColumn].toString().toLowerCase()== "no db") continue;
             
-            //data[i][readColumn] = "read";
-            var result = cleanTheList(data[i][linkColumn]);
-               
-            if (result == true) {
-                data[i][scriptColumn] = "done"; data[i][dateSciptColumn] = currentDate; 
-                getRejectionRate(data[i][linkColumn].toString(),data[i][dateColumn].toString());
-                }
-            else if (result == false) data[i][commentColumn] =  "unChecked" ;
-            else  data[i][scriptColumn] = result ;
-            
-            
+            masRows.push(i);
+    
         }
-       
-
-        wholeTable.setValues(data);
-
-        
-   
-        
-    }
-    else Browser.msgBox(nameOfSheet + " is missing");
-  Browser.msgBox("Script is Done");
-    //catch (e) {Browser.msgBox(e);}
+     }
+     else {
+          //var count = 0;
+          
+          for (var i = 0; i < data.length; i++) {
+              //if (count>100) break;
+              if (data[i][commentColumn] == "UNChecked") continue;
+              if (data[i][scriptColumn] != "" || data[i][linkColumn] == 0 ) continue;
+              if (data[i][commentColumn].toString().toLowerCase()== "no db") continue;
+              masRows.push(i);  
+             // count++;
+              
+          }
+     }
+     Browser.msgBox("Rows to script: " + masRows.length)
+     return masRows
 }
 function getRejectionRate(link,date)
 {
+try {
     var rejSheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/13vyGSPKDGfFJiw_tc8ahnGxM2T6GiIXpfZLjZJm6UNI/edit#gid=0").getSheets()[0];
     var sh = SpreadsheetApp.openByUrl(link);
    
     var curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
     var columns = curSheet.getRange(1,1,1,curSheet.getLastColumn()).getValues();
     
-    
+
     var titleColumn = columns[0].indexOf("title")+1;
     var countryColumn = columns[0].indexOf("country")+1;
     var employeesColumn = columns[0].indexOf("employees")+1;
@@ -298,7 +291,6 @@ function getRejectionRate(link,date)
     //var OV_comments = curSheet.getRange(2,OV_CommentColumn,curSheet.getLastRow()).getValues();
     var countChecked = getCheckedLeads(curSheet);
     if (countChecked==-1) {Browser.msgBox("ov_comment missing"); return ; }
-   // Browser.msgBox(countChecked)
     var countsGreenAndOthers = getRejCounts(curSheet, titleColumn);
     var RejTitlesGreen = countsGreenAndOthers[0];
     countRejTitlesGreen = (countsGreenAndOthers[0]/countChecked*100).toFixed(2), countRejTitlesYellow = (countsGreenAndOthers[1]/countChecked*100).toFixed(2);
@@ -312,8 +304,8 @@ function getRejectionRate(link,date)
     countRejEmployeesGreen = (countsGreenAndOthers[0]/countChecked*100).toFixed(2), countRejEmployeesYellow = (countsGreenAndOthers[1]/countChecked*100).toFixed(2);
     var rejEmployeesGreen = countsGreenAndOthers[0] ;
     var countsGreenAndOthers = getRejCounts(curSheet, revenueColumn);
-    var rejRevenueGreen = countsGreenAndOthers[0];
-    countRejRevenueGreen = (countsGreenAndOthers[0]/countChecked*100).toFixed(2), countRejRevenueYellow = (countsGreenAndOthers[1]/countChecked*100).toFixed(2);
+    var rejRevenueGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+    countRejRevenueGreen = countsGreenAndOthers ==0 ? 0: (countsGreenAndOthers[0]/countChecked*100).toFixed(2), countRejRevenueYellow = countsGreenAndOthers == 0 ? 0: (countsGreenAndOthers[1]/countChecked*100).toFixed(2);
     var rejNac = getRejNac(curSheet, companyColumn);
     var countRejNAC = (rejNac/countChecked*100).toFixed(2);
     //countRejNAC = ((countsGreenAndOthers[0] + countsGreenAndOthers [1])/countChecked*100).toFixed(2);
@@ -335,6 +327,9 @@ function getRejectionRate(link,date)
     
     rejSheet.appendRow([date,name,link,countRejTitlesGreen+'%',RejTitlesGreen, countRejTitlesYellow+'%',countRejCountryGreen+'%',rejCountryGreen, countRejCountryYellow+'%',countRejIndustryGreen+'%',rejIndustryGreen, countRejIndustryYellow+'%',countRejEmployeesGreen+'%',rejEmployeesGreen,countRejEmployeesYellow+'%',countRejRevenueGreen+'%',rejRevenueGreen, countRejRevenueYellow+'%',countRejNAC+'%',rejNac,countChecked])
     rejSheet.getRange(rejSheet.getLastRow(),1,1,3).setBackground(newBgColor)
+    
+    }
+    catch (err) {Browser.msgBox("in rejection function " + err)}
 
 }
 function getCheckedLeads (curSheet )
@@ -401,7 +396,12 @@ function getNameOfSheet(MonthSelected, YearSelected) { //not work yet
     year = year.replace("20","");
     return ( months[MonthSelected-1] + "_" + year );  
 }
-
+function replaceSpaces(text)
+{
+     text  = text.toString().toLowerCase();
+     text = text.replace(/^\s*/, '').replace(/\s*$/, '');
+     return text;
+}
 function generateCurrentDate() {
 
     var today = new Date();
