@@ -21,7 +21,6 @@ function createDialog() {
         .setWidth(270);
     SpreadsheetApp.getUi().showModalDialog(htmlDialog, "Select Date");
 }
-
 function getMissingColumns(sheet, columnNames, newColumnNames) {
     try {
         var range = sheet.getRange(1, 1, 1, sheet.getLastColumn());
@@ -57,78 +56,81 @@ function cleanTheList(linkList) {
     try { currentList = SpreadsheetApp.openByUrl(linkList).getSheets()[0]; }
     catch (e) { return "no permission"; }
 
-    var lastColumn = currentList.getLastColumn();
-    var lastRow = currentList.getLastRow();
-    var range = currentList.getRange(1, 1, lastRow, lastColumn);
-    var values = range.getValues();
-    var maxRows = currentList.getMaxRows();
-    var countRows = maxRows - lastRow;
-
-    if (countRows != 0) currentList.deleteRows(lastRow + 1, maxRows - lastRow); //delete empty rows;
-
-    var columnNames = ["first_name", "last_name", "company", "title", "email", "address", "city", "state", "zip", "country", "phone", "prooflink", "employees", "employees_prooflink", "revenue", "revenue_prooflink","pv_comment"];
-    var newColumnNames = [];
-    var mistakes = getMissingColumns(currentList, columnNames, newColumnNames)
-
-    var bgColors = range.getBackgrounds();
-    var weights = range.getFontWeights();
-    var fontColors = range.getFontColors();
-
-    var newEmail = false;
-    var newEmailRows = "";
-
-    for (var i = 1; i < lastRow; i++) {
-
-        var prooflink = newColumnNames['prooflink']
-
-        if (typeof prooflink == 'number') {
-            var link_str = values[i][prooflink].toString();
-            if (link_str.indexOf('linkedin') != -1)
-                values[i][prooflink] = link_str.split('?')[0];
-        }
-        var employees_prooflink = newColumnNames['employees_prooflink']
-
-        if (typeof employees_prooflink == 'number') {
-            link_str = values[i][employees_prooflink].toString();
-            if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
-                values[i][employees_prooflink] = link_str.split('?')[0];
-        }
-
-        var revenue_prooflink = newColumnNames['revenue_prooflink']
-        if (typeof revenue_prooflink == 'number') {
-            link_str = values[i][revenue_prooflink].toString();
-            if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
-                values[i][revenue_prooflink] = link_str.split('?')[0];
-        }
-        var email = newColumnNames['email']
-        if (typeof email == 'number' && bgColors[0][email] != "#f5bfb3" && bgColors[i][email] == "#ffff00" && fontColors[i][email] == "#ff0000" && weights[i][email] == "bold") {
-            currentList.getRange(1, email + 1).setBackground("#f5bfb3");
-            newEmailRows += (i + 1) + ", ";
-
-        }
-    }
     try {
-        if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes != "" ? mistakes : ""; return mistakes }
-        else if (mistakes != "") { return "missing " + mistakes; }
-    } catch (err) { Browser.msgBox("ERRRRRRRRRRRRROR " + err) }
-    var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
+        var lastColumn = currentList.getLastColumn();
+        var lastRow = currentList.getLastRow();
+        var range = currentList.getRange(1, 1, lastRow, lastColumn);
+        var values = range.getValues();
+        var maxRows = currentList.getMaxRows();
+        var countRows = maxRows - lastRow;
 
-    for (var i = 1; i < lastRow; i++) {
-        if (bgColors[i][newColumnNames['prooflink']] != "#ffffff") { isUnCheckedList = false; break; }
+        if (countRows != 0) currentList.deleteRows(lastRow + 1, maxRows - lastRow); //delete empty rows;
 
-        else if (bgColors[i][newColumnNames['phone']] != "#ffffff") { isUnCheckedList = false; break; }
+        var columnNames = ["first_name", "last_name", "company", "title", "email", "address", "city", "state", "zip", "country", "phone", "prooflink", "employees", "employees_prooflink", "revenue", "revenue_prooflink"];
+        var newColumnNames = [];
+        var mistakes = getMissingColumns(currentList, columnNames, newColumnNames)
 
-        else if (bgColors[i][newColumnNames['title']] != "#ffffff") { isUnCheckedList = false; break; }
-    }
-    range.setValues(values);
-    if (isUnCheckedList) {
-        // Browser.msgBox("false")
+        var bgColors = range.getBackgrounds();
+        var weights = range.getFontWeights();
+        var fontColors = range.getFontColors();
 
-        return false;
+        var newEmail = false;
+        var newEmailRows = "";
 
-    }
+        for (var i = 1; i < lastRow; i++) {
 
-    return true;
+            var prooflink = newColumnNames['prooflink']
+
+            if (typeof prooflink == 'number') {
+                var link_str = values[i][prooflink].toString();
+                if (link_str.indexOf('linkedin') != -1)
+                    values[i][prooflink] = link_str.split('?')[0];
+            }
+            var employees_prooflink = newColumnNames['employees_prooflink']
+
+            if (typeof employees_prooflink == 'number') {
+                link_str = values[i][employees_prooflink].toString();
+                if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
+                    values[i][employees_prooflink] = link_str.split('?')[0];
+            }
+
+            var revenue_prooflink = newColumnNames['revenue_prooflink']
+            if (typeof revenue_prooflink == 'number') {
+                link_str = values[i][revenue_prooflink].toString();
+                if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
+                    values[i][revenue_prooflink] = link_str.split('?')[0];
+            }
+            var email = newColumnNames['email']
+            if (typeof email == 'number' && bgColors[0][email] != "#f5bfb3" && bgColors[i][email] == "#ffff00" && fontColors[i][email] == "#ff0000" && weights[i][email] == "bold") {
+                currentList.getRange(1, email + 1).setBackground("#f5bfb3");
+                newEmailRows += (i + 1) + ", ";
+
+            }
+        }
+        try {
+            if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes != "" ? mistakes : ""; return mistakes }
+            else if (mistakes != "") { return "missing " + mistakes; }
+        } catch (err) { Browser.msgBox("ERRRRRRRRRRRRROR " + err) }
+        var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
+
+        for (var i = 1; i < lastRow; i++) {
+            if (bgColors[i][newColumnNames['prooflink']] != "#ffffff") { isUnCheckedList = false; break; }
+
+            else if (bgColors[i][newColumnNames['phone']] != "#ffffff") { isUnCheckedList = false; break; }
+
+            else if (bgColors[i][newColumnNames['title']] != "#ffffff") { isUnCheckedList = false; break; }
+        }
+        range.setValues(values);
+        if (isUnCheckedList) {
+            // Browser.msgBox("false")
+
+            return false;
+
+        }
+
+        return true;
+
+    } catch (err) { return "exception: " + err }
 }
 
 function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth, checkRejectionRate) {
@@ -188,7 +190,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
                 //ddata[currentRow][readColumn] = "read";
                 //wholeTable.setValues(data);
                 var result = cleanTheList(data[currentRow][linkColumn]);
-                if (result == true) {
+                if (result == true || data[currentRow][scriptColumn].toString() == "ok") {
                     data[currentRow][scriptColumn] = "done";
                     data[currentRow][dateSciptColumn] = currentDate;
 
@@ -196,6 +198,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
 
                 }
                 else if (result == false) data[currentRow][commentColumn] = isWholeMonth ? "UNChecked" : "unChecked";
+
                 else data[currentRow][scriptColumn] = result;
 
                 wholeTable.setValues(data)
@@ -216,7 +219,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
 
 
     else Browser.msgBox(nameOfSheet + " is missing");
-    Browser.msgBox("Script is Done");
+    //Browser.msgBox("Script is Done");
 }
 function getRowsToScript(data, isWholeMonth, dateToScript) {
     var masRows = []
@@ -291,8 +294,8 @@ function getRejectionRate(link, date) {
         countRejEmployeesGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejEmployeesYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
         var rejEmployeesGreen = countsGreenAndOthers[0];
         var countsGreenAndOthers = getRejCounts(curSheet, revenueColumn);
-        var rejRevenueGreen = countsGreenAndOthers[0];
-        countRejRevenueGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejRevenueYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
+        var rejRevenueGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        countRejRevenueGreen = countsGreenAndOthers == 0 ? 0 : (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejRevenueYellow = countsGreenAndOthers == 0 ? 0 : (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
         var rejNac = getRejNac(curSheet, companyColumn);
         var countRejNAC = (rejNac / countChecked * 100).toFixed(2);
         //countRejNAC = ((countsGreenAndOthers[0] + countsGreenAndOthers [1])/countChecked*100).toFixed(2);
