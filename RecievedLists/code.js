@@ -21,8 +21,9 @@ function createDialog() {
         .setWidth(270);
     SpreadsheetApp.getUi().showModalDialog(htmlDialog, "Select Date");
 }
-function getMissingColumns(sheet, columnNames, newColumnNames) {
+function getMissingColumns(link, columnNames, newColumnNames) {
     try {
+        var sheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
         var range = sheet.getRange(1, 1, 1, sheet.getLastColumn());
         var values = range.getValues();
 
@@ -68,7 +69,7 @@ function cleanTheList(linkList) {
 
         var columnNames = ["first_name", "last_name", "company", "title", "email", "address", "city", "state", "zip", "country", "phone", "prooflink", "employees", "employees_prooflink", "revenue", "revenue_prooflink"];
         var newColumnNames = [];
-        var mistakes = getMissingColumns(currentList, columnNames, newColumnNames)
+        var mistakes = getMissingColumns(linkList, columnNames, newColumnNames)
 
         var bgColors = range.getBackgrounds();
         var weights = range.getFontWeights();
@@ -100,19 +101,20 @@ function cleanTheList(linkList) {
                 if (link_str.indexOf('yahoo') != -1 || link_str.indexOf('linkedin') != -1)
                     values[i][revenue_prooflink] = link_str.split('?')[0];
             }
-            var email = newColumnNames['email']
+            //check email
+            /* var email = newColumnNames['email']
             if (typeof email == 'number' && bgColors[0][email] != "#f5bfb3" && bgColors[i][email] == "#ffff00" && fontColors[i][email] == "#ff0000" && weights[i][email] == "bold") {
                 currentList.getRange(1, email + 1).setBackground("#f5bfb3");
                 newEmailRows += (i + 1) + ", ";
 
-            }
+            } */
         }
-        try {
-            if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes != "" ? mistakes : ""; return mistakes }
-            else if (mistakes != "") { return "missing " + mistakes; }
-        } catch (err) { Browser.msgBox("ERRRRRRRRRRRRROR " + err) }
-        var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
 
+        //if (newEmailRows) { mistakes = "New emails found: " + newEmailRows + "missing " + mistakes != "" ? mistakes : ""; return mistakes }
+        if (mistakes != "") { return "missing " + mistakes; }
+
+
+        var isUnCheckedList = true; //check if list is fully uncheked (no color coding for: title,phone, prooflink)
         for (var i = 1; i < lastRow; i++) {
             if (bgColors[i][newColumnNames['prooflink']] != "#ffffff") { isUnCheckedList = false; break; }
 
@@ -132,7 +134,22 @@ function cleanTheList(linkList) {
 
     } catch (err) { return "exception: " + err }
 }
-
+function ifListChecked(link) {
+    try {
+        var curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
+        var lastRow = curSheet.getLastRow();
+        if (curSheet.getMaxRows() - lastRow > 0)
+            curSheet.deleteRows(lastRow + 1, curSheet.getMaxRows() - lastRow); //delete empty rows;
+        var columns = curSheet.getRange(1, 1, 1, curSheet.getLastColumn()).getValues();
+        var ovCommentColumn = columns[0].indexOf("ov_comment") + 1;
+        if (!ovCommentColumn) { return false; }
+        var ovCommentRows = curSheet.getRange(2, ovCommentColumn, lastRow - 1).getValues();
+        //Browser.msgBox(curSheet.getLastRow())
+        for (var row = 0; row < ovCommentRows.length; row++)
+            if (ovCommentRows[row] == "") return false;
+        return true;
+    } catch (err) { return false; }
+}
 function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth, checkRejectionRate) {
 
 
@@ -193,13 +210,16 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
                 if (result == true || data[currentRow][scriptColumn].toString() == "ok") {
                     data[currentRow][scriptColumn] = "done";
                     data[currentRow][dateSciptColumn] = currentDate;
-
+                    if (data[currentRow][commentColumn].toString() == "unChecked") data[currentRow][commentColumn] = "";
                     if (checkRejectionRate) getRejectionRate(data[currentRow][linkColumn].toString(), data[currentRow][dateColumn].toString());
 
                 }
                 else if (result == false) data[currentRow][commentColumn] = isWholeMonth ? "UNChecked" : "unChecked";
 
-                else data[currentRow][scriptColumn] = result;
+                else {
+                    data[currentRow][scriptColumn] = result;
+
+                }
 
                 wholeTable.setValues(data)
 
@@ -219,15 +239,15 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
 
 
     else Browser.msgBox(nameOfSheet + " is missing");
-    //Browser.msgBox("Script is Done");
+    if (!isWholeMonth) Browser.msgBox("Script is Done");
 }
 function getRowsToScript(data, isWholeMonth, dateToScript) {
     var masRows = []
     var dateColumn = 0, commentColumn = 5, amountOfLeadsColumn = 2, linkColumn = 4, statusColumn = 7, dateSciptColumn = 8, scriptColumn = 9, readColumn = 10;
     if (!isWholeMonth) {
+
         for (var i = 0; i < data.length; i++) {
 
-            // Browser.msgBox(dateToScript + " "+ data[i][dateColumn]);
 
             if (data[i][dateColumn] != dateToScript) continue;
             if (data[i][scriptColumn] == "done" || data[i][linkColumn] == 0) continue;
@@ -235,7 +255,9 @@ function getRowsToScript(data, isWholeMonth, dateToScript) {
             var comment = data[i][commentColumn].toString().toLowerCase();
 
             if (data[i][amountOfLeadsColumn] > 50)
-                if ((status != "done" && comment == "") || (comment != "platform" && status == "")) continue;
+                if ((status != "done" && comment == "") || (comment != "platform" && status == "")) {
+                    if (!ifListChecked(data[i][linkColumn])) continue;
+                }
             if (data[i][commentColumn].toString().toLowerCase() == "no db") continue;
 
             masRows.push(i);
@@ -280,7 +302,7 @@ function getRejectionRate(link, date) {
 
         //var OV_comments = curSheet.getRange(2,OV_CommentColumn,curSheet.getLastRow()).getValues();
         var countChecked = getCheckedLeads(curSheet);
-        if (countChecked == -1) { Browser.msgBox("ov_comment missing"); return; }
+        if (countChecked == -1) { return; }
         var countsGreenAndOthers = getRejCounts(curSheet, titleColumn);
         var RejTitlesGreen = countsGreenAndOthers[0];
         countRejTitlesGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejTitlesYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
@@ -322,21 +344,35 @@ function getRejectionRate(link, date) {
     catch (err) { Browser.msgBox("in rejection function " + err) }
 
 }
+function getCompaniesIndustries(link) {
+    var curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
+    var columns = curSheet.getRange(1, 1, 1, curSheet.getLastColumn()).getValues();
+    var industryColumn = columns[0].indexOf("industry") + 1;
+    var companyNameColumn = columns[0].indexOf("Company") + 1;
+    var companyVerifiedColumn = columns[0].indexOf("company_verified") + 1;
+    if (!industryColumn || !companyNameColumn || !companyVerifiedColumn) return false;
+    var rowsCompanyVerifies = curSheet.getRange(2, companyVerifiedColumn, curSheet.getLastRow())
+    var rowsIndustryColumn = curSheet.getRange(2, companyVerifiedColumn, curSheet.getLastRow())
+    var companyNameColumn = curSheet.getRange(2, companyVerifiedColumn, curSheet.getLastRow())
+
+}
 function getCheckedLeads(curSheet) {
     var OV_comments = ["Y1: linkedin/company website", "Y2: PL Summary", "Y3: Facebook", "Y4: Suspicious Linkedin", "Y5: 3rd Party Prooflink", "N1: NWC", "N2: Out of Business/Bad data", "N/A: PV Tool", "N/A: Title/PL Summary", "N/A: Industry", "N/A: Emp. Size", "N/A: Revenue", "N/A: Probably NWC",
         "N/A: Country/GEO", "N/A: NAC/SUP", "N/A: NAC", "NAC", "N/A: Prooflink", "N/A: Back-up (verified)", "N/A: Wrong email/General domain", "N/A: Other", "Q1: Questionable Title", "Q2: Questionable Company", "Q3: Other", "N/A: Country"];
     //Browser.msgBox(OV_comments)
     var columns = curSheet.getRange(1, 1, 1, curSheet.getLastColumn()).getValues();
     var OV_CommentColumn = columns[0].indexOf("ov_comment") + 1;
-
-    var OV_comments_all = curSheet.getRange(2, OV_CommentColumn, curSheet.getLastRow()).getValues();
+    //Browser.msgBox(OV_CommentColumn);
     if (OV_CommentColumn <= 0) return -1;
+    var OV_comments_all = curSheet.getRange(2, OV_CommentColumn, curSheet.getLastRow()).getValues();
+
     var countCheckedLeads = 0;
     OV_comments_all.forEach(function (cell) {
         // Browser.msgBox(cell)
         if (OV_comments.indexOf(cell.toString()) != -1)
             countCheckedLeads++;
     });
+
     return countCheckedLeads;
 }
 function getRejNac(curSheet, columnIndex) {
@@ -384,6 +420,7 @@ function replaceSpaces(text) {
     text = text.toString().toLowerCase();
     text = text.replace(/^\s*/, '').replace(/\s*$/, '');
     return text;
+
 }
 function generateCurrentDate() {
 
