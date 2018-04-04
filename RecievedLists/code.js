@@ -297,53 +297,67 @@ function getRejectionRate(link, date) {
         var companyColumn = columns[0].indexOf("company") + 1;
         var lastRow = curSheet.getLastRow();
 
-        var countChecked = 0, countRejTitlesGreen = 0, countRejTitlesYellow = 0, countRejCountryGreen = 0, countRejCountryYellow = 0, countRejIndustryGreen = 0, countRejIndustryYellow = 0,
-            countRejEmployeesGreen = 0, countRejEmployeesYellow = 0, countRejRevenueGreen = 0, countRejRevenueYellow = 0, countRejNAC = 0;
 
         //var OV_comments = curSheet.getRange(2,OV_CommentColumn,curSheet.getLastRow()).getValues();
         var countChecked = getCheckedLeads(curSheet);
         if (countChecked == -1) { return; }
+
+        function getpercent(countsGreenAndOthers, index) {
+            return countsGreenAndOthers ? (countsGreenAndOthers[index] / countChecked * 100).toFixed(2) : 0;
+        }
         var countsGreenAndOthers = getRejCounts(curSheet, titleColumn);
-        var RejTitlesGreen = countsGreenAndOthers[0];
-        countRejTitlesGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejTitlesYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
-        var countsGreenAndOthers = getRejCounts(curSheet, countryColumn);
-        var rejCountryGreen = countsGreenAndOthers[0];
-        countRejCountryGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejCountryYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
-        var countsGreenAndOthers = getRejCounts(curSheet, industryColumn);
-        countRejIndustryGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejIndustryYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
-        var rejIndustryGreen = countsGreenAndOthers[0];
-        var countsGreenAndOthers = getRejCounts(curSheet, employeesColumn);
-        countRejEmployeesGreen = (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejEmployeesYellow = (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
-        var rejEmployeesGreen = countsGreenAndOthers[0];
-        var countsGreenAndOthers = getRejCounts(curSheet, revenueColumn);
+        var RejTitlesGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var countRejTitlesGreen = getpercent(countsGreenAndOthers, 0), countRejTitlesYellow = getpercent(countsGreenAndOthers, 1);
+
+        countsGreenAndOthers = getRejCounts(curSheet, countryColumn);
+        var rejCountryGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var countRejCountryGreen = getpercent(countsGreenAndOthers, 0), countRejCountryYellow = getpercent(countsGreenAndOthers, 1)
+
+        countsGreenAndOthers = getRejCounts(curSheet, industryColumn);
+        var rejIndustryGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var countRejIndustryGreen = getpercent(countsGreenAndOthers, 0), countRejIndustryYellow = getpercent(countsGreenAndOthers, 1)
+
+        countsGreenAndOthers = getRejCounts(curSheet, employeesColumn);
+        var rejEmployeesGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var countRejEmployeesGreen = getpercent(countsGreenAndOthers, 0), countRejEmployeesYellow = getpercent(countsGreenAndOthers, 1)
+
+        countsGreenAndOthers = getRejCounts(curSheet, revenueColumn);
         var rejRevenueGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
-        countRejRevenueGreen = countsGreenAndOthers == 0 ? 0 : (countsGreenAndOthers[0] / countChecked * 100).toFixed(2), countRejRevenueYellow = countsGreenAndOthers == 0 ? 0 : (countsGreenAndOthers[1] / countChecked * 100).toFixed(2);
+        var countRejRevenueGreen = getpercent(countsGreenAndOthers, 0), countRejRevenueYellow = getpercent(countsGreenAndOthers, 1)
+
         var rejNac = getRejNac(curSheet, companyColumn);
         var countRejNAC = (rejNac / countChecked * 100).toFixed(2);
         //countRejNAC = ((countsGreenAndOthers[0] + countsGreenAndOthers [1])/countChecked*100).toFixed(2);
-        // var date =  new Date(); 
-        var name = sh.getName();
+
+
+        var dateScriptRun = generateCurrentDate()
+
         var lastCellDate = rejSheet.getRange(rejSheet.getLastRow(), 1);
-        //ead1dc - light magenta 3
-        //d9d2e9 - light purple 3
+        rejSheet.appendRow([dateScriptRun, date, sh.getName(), link, countRejTitlesGreen + '%', RejTitlesGreen, countRejTitlesYellow + '%', countRejCountryGreen + '%', rejCountryGreen, countRejCountryYellow + '%', countRejIndustryGreen + '%', rejIndustryGreen, countRejIndustryYellow + '%', countRejEmployeesGreen + '%', rejEmployeesGreen, countRejEmployeesYellow + '%', countRejRevenueGreen + '%', rejRevenueGreen, countRejRevenueYellow + '%', countRejNAC + '%', rejNac, countChecked])
 
-        //#cfe2f3 - default (light blue)
 
-        var newBgColor = "#cfe2f3"
-        if (lastCellDate.getValue() != date) {
-            if (lastCellDate.getBackground() == "#ead1dc")
-                newBgColor = "#d9d2e9";
-            else newBgColor = "#ead1dc";
-        }
-        else newBgColor = lastCellDate.getBackground();
-
-        rejSheet.appendRow([date, name, link, countRejTitlesGreen + '%', RejTitlesGreen, countRejTitlesYellow + '%', countRejCountryGreen + '%', rejCountryGreen, countRejCountryYellow + '%', countRejIndustryGreen + '%', rejIndustryGreen, countRejIndustryYellow + '%', countRejEmployeesGreen + '%', rejEmployeesGreen, countRejEmployeesYellow + '%', countRejRevenueGreen + '%', rejRevenueGreen, countRejRevenueYellow + '%', countRejNAC + '%', rejNac, countChecked])
-        rejSheet.getRange(rejSheet.getLastRow(), 1, 1, 3).setBackground(newBgColor)
-
+        setBackground(rejSheet, dateScriptRun, lastCellDate)
     }
     catch (err) { Browser.msgBox("in rejection function " + err) }
 
 }
+function setBackground(rejSheet, dateScriptRun, lastCellDate) {
+    //ead1dc - light magenta 3
+    //d9d2e9 - light purple 3
+    //#cfe2f3 - default (light blue)
+    /* Browser.msgBox(lastCellDate.getValue() + "  "  + new Date(dateScriptRun) )
+    var newBgColor = "#cfe2f3" */
+    /* if (new Date(lastCellDate.getValue()) != new Date(dateScriptRun)) {
+        Browser.msgBox("test")
+        if (lastCellDate.getBackground() == "#ead1dc")
+            newBgColor = "#d9d2e9";
+        else newBgColor = "#ead1dc";
+    }
+    else  */
+    newBgColor = lastCellDate.getBackground();
+    rejSheet.getRange(rejSheet.getLastRow(), 1, 1, 3).setBackground(newBgColor)
+}
+
 function getCompaniesIndustries(link) {
     var curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
     var columns = curSheet.getRange(1, 1, 1, curSheet.getLastColumn()).getValues();
