@@ -3,43 +3,73 @@
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <style>
-        .selectDate {
-            margin-top: 10px;
-        }
+    
+    input:required {
+      border: 1px solid green;
+    }
+    input:required:invalid {
+      border: 1px solid red;
+    }
 
+
+      label, input{
+      display:block;
+         
+      }
+      label{
+      font-style:italic;
+       font-weight: bold;
+       margin-top:15px;
+       margin-bottom: 5px;
+      }
+      input, select, button {
+          font-weight: 300;
+
+      }
+      input:hover, select:hover, button:hover {
+      background-color: #E8F5FF;
+        cursor:pointer;
+      }
+    
         #ok {
-            height: 20px;
+        margin:15px auto;
+            
             display: block;
             position: relative;
-            border: 1px solid white;
-            margin: 0 auto;
+            border: 1px solid black;
             font-size: 16px;
             font-weight: 600;
         }
     </style>
 </head>
-<body>
-
-    Date to report: <p>
-
-        <select id="SelectDay"> </select>
-        <select id="SelectMonth"> </select>
-        <select id="SelectYear"> </select>
-    <p> List link </p>
-    <input size='17' type="text" id="ListLink">
-    <p>List Type </p>
+<body >
+    
+    <label>QC Date: </label> 
+    <input id="datePickerQc" type="date"> 
+<!--     <select id="SelectDay"> </select>
+    <select id="SelectMonth"> </select>
+    <select id="SelectYear"> </select> -->
+    <label> List link</label> 
+    <input required size='17' type="text" id="ListLink" placeholder = "Input the link">
+    <label>List Type</label> 
     <select id="SelectType">
         <option value="Direct">Direct</option>
         <option value="Special">Special</option>
         <option value="Regular">Regular</option>
     </select>
-    <p> <input type="checkbox" id="checkBoxWithoutUpdates" checked disabled > Append rows without Updates </p>
-    <p> <button id="ok" onclick="OkButton()">OK</button></p>
+    <label>LV Date</label> 
+   <input id="datePickerLv" type="date"> 
+
+<!--   <input type="checkbox" id="checkBoxWithoutUpdates" checked disabled > Append rows without Updates  -->
+    <button id="ok" onclick="OkButton()">Start report</button>
 
     <script>
-
+  document.getElementById('datePickerQc').valueAsDate = new Date();
+  document.getElementById('datePickerLv').valueAsDate = new Date();
    // var select = document.getElementById("SelectDay");
-   var x = document.getElementById("SelectDay");
+   
+   
+  /*  var x = document.getElementById("SelectDay");
    for (var i=1;i<=31;i++){
        var option = document.createElement("option");
        option.text = i;
@@ -78,31 +108,34 @@
      d.selected = true;
      var y = document.getElementById('y' + currentYear);
      y.selected = true;
-
+ */
 		
 
      function OkButton()
      {
      try{
-       var day = document.getElementById("SelectDay");
+       //var temp = document.getElementById("datePicker").value.split('-')
+       var lvDate =  ( document.getElementById("datePickerLv").value ) //temp[2] + '/' + temp[1] + '/' + temp[0]
+       var qcDate = document.getElementById("datePickerQc").value 
+      /*  var day = document.getElementById("SelectDay");
        var DaySelected = day.options[day.selectedIndex].value;
        var month = document.getElementById("SelectMonth");
        var MonthSelected = month.options[month.selectedIndex].value;
        var year = document.getElementById("SelectYear");
        var YearSelected = year.options[year.selectedIndex].value;
-       var dateToScript = MonthSelected + "/" +DaySelected + "/"+ YearSelected;
+       var dateToScript = MonthSelected + "/" +DaySelected + "/"+ YearSelected; */
        var listType = document.getElementById("SelectType").value;
        var listLink = document.getElementById("ListLink").value;
-        var isAppend= document.getElementById("checkBoxWithoutUpdates").checked;
+        /* var isAppend= document.getElementById("checkBoxWithoutUpdates").checked; */
        //alert(listType);
-       google.script.run.doReportnew(listLink, listType, dateToScript, isAppend);
+       google.script.run.doReportnew(listLink, listType, qcDate, true, lvDate);
        google.script.host.close();
            }
            catch (e) {
-           Browser.msgBox(e);}
+           alert(e);}
      }
     </script>
+
+
 </body>
 </html>
-
-

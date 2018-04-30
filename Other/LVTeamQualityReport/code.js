@@ -4,7 +4,7 @@ function onOpen() {
         .createMenu('new Report Script')
         .addItem('DO REPORT', 'createDialogNew')
         .addSeparator()
-        .addItem('upd. info', 'updateCheckers')
+        //.addItem('upd. info', 'updateCheckers')
         .addToUi();
 }
 
@@ -13,46 +13,50 @@ function createDialogNew() {
     var htmlDialog = HtmlService.createHtmlOutputFromFile("newScriptDialog.html")
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setHeight(300)
-        .setWidth(270);
+        .setWidth(200);
     SpreadsheetApp.getUi().showModalDialog(htmlDialog, "Select Date");
 }
 
-function doReportnew(listLink, listType, dayToScript, isAppend) {
-    var currentSheet = SpreadsheetApp.getActiveSheet();
-    var QCInfo=SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule");
-    var userEmail = Session.getActiveUser().getEmail();
-    var QC_ID;
-    var QC_TabName;
-    if (userEmail) {
-
-        //var QCSchedule = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule");
-        var rangeQCID = QCInfo.getRange(4, 1, QCInfo.getLastRow(), 4).getValues();
-        for (var i = 0; i < rangeQCID.length; i++)
-            if (rangeQCID[i][3] == userEmail.toString()) {
-                QC_ID = rangeQCID[i][2];
-                QC_TabName = "QC " + rangeQCID[i][1];
-                break;
-            }
-
-    }
-    if (!QC_ID) { Browser.msgBox("NO QC OPERATOR"); return 0; }
-    if (!listLink) {Browser.msgBox("No LINK"); return 0; }
-    Browser.msgBox("Report Started. It may take some time");
+function doReportnew(listLink, listType, dayToScript, isAppend, lvDate) {
+    try {
     
-    var result = reportList(QCInfo, listType, dayToScript, listLink, QC_ID, QC_TabName, isAppend);
+        var currentSheet = SpreadsheetApp.getActiveSheet();
+        var QCInfo = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule");
+        var userEmail = Session.getActiveUser().getEmail();
+        var QC_ID;
+        var QC_TabName;
+        if (userEmail) {
+
+            //var QCSchedule = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule");
+            var rangeQCID = QCInfo.getRange(4, 1, QCInfo.getLastRow(), 4).getValues();
+            for (var i = 0; i < rangeQCID.length; i++)
+                if (rangeQCID[i][3] == userEmail.toString()) {
+                    QC_ID = rangeQCID[i][2];
+                    QC_TabName = "QC " + rangeQCID[i][1];
+                    break;
+                }
+
+        }
+        if (!QC_ID) { Browser.msgBox("NO QC OPERATOR"); return 0; }
+        if (!listLink) { Browser.msgBox("No LINK"); return 0; }
+        Browser.msgBox( QC_TabName + " \nReport Started. It may take some time");
+
+        var result = reportList(QCInfo, listType, dayToScript, listLink, QC_ID, QC_TabName, isAppend, lvDate);
+
+
+    } catch (err) { Browser.msgBox("Error 1.0 " + err); }
 }
-function updateCheckers()
-{
-     var lvLink= "https://docs.google.com/spreadsheets/d/1R6_o3_3nDv_1_zxgSRPFztTBn-mEyBztFeT5_3KcY_w/edit#gid=62608384"
-     var operTab = SpreadsheetApp.openByUrl(lvLink).getSheetByName("Oper_Tab");
-     var checkersID = operTab.getRange(5, 4, operTab.getLastRow()).getValues();
-     var checkersName = operTab.getRange(5, 11, operTab.getLastRow()).getValues();
-     
-     var currentSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule")
-     currentSheet.getRange(4, 6, checkersID.length).setValues(checkersID);
-     currentSheet.getRange(4,7, checkersID.length).setValues(checkersName);
+function updateCheckers() {
+    var lvLink = "https://docs.google.com/spreadsheets/d/1R6_o3_3nDv_1_zxgSRPFztTBn-mEyBztFeT5_3KcY_w/edit#gid=62608384"
+    var operTab = SpreadsheetApp.openByUrl(lvLink).getSheetByName("Oper_Tab");
+    var checkersID = operTab.getRange(5, 4, operTab.getLastRow()).getValues();
+    var checkersName = operTab.getRange(5, 11, operTab.getLastRow()).getValues();
+
+    var currentSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QC_Schedule")
+    currentSheet.getRange(4, 6, checkersID.length).setValues(checkersID);
+    currentSheet.getRange(4, 7, checkersID.length).setValues(checkersName);
 }
-function reportList(QCInfo, listType, dayToScript, listLink, ID, QCTabName, isAppend) {
+function reportList(QCInfo, listType, dayToScript, listLink, ID, QCTabName, isAppend, lvDate) {
     try {
         var listToReport = SpreadsheetApp.openByUrl(listLink).getSheets()[0];
         var valuesToSearchColumn = listToReport.getRange(1, 1, 1, listToReport.getLastColumn()).getValues();
@@ -60,12 +64,12 @@ function reportList(QCInfo, listType, dayToScript, listLink, ID, QCTabName, isAp
         var qcDateColumn = valuesToSearchColumn[0].indexOf("qc_date") + 1;
         var qcColumn = valuesToSearchColumn[0].indexOf("qc_comment") + 1;
         var checkedByColumn = valuesToSearchColumn[0].indexOf("checked_by") + 1;
-        
-        if (qcDateColumn<=0 ) {Browser.msgBox("qc_date column is missing"); return;}
-        else if (qcColumn<=0 ) {Browser.msgBox("qc_comment column is missing"); return;}
-        else if (checkedByColumn<=0 ) {Browser.msgBox("checked_by column is missing"); return;}
-       
-        
+
+        if (qcDateColumn <= 0) { Browser.msgBox("qc_date column is missing"); return; }
+        else if (qcColumn <= 0) { Browser.msgBox("qc_comment column is missing"); return; }
+        else if (checkedByColumn <= 0) { Browser.msgBox("checked_by column is missing"); return; }
+
+
 
         var rowsCount = listToReport.getLastRow() - 1;
 
@@ -75,53 +79,56 @@ function reportList(QCInfo, listType, dayToScript, listLink, ID, QCTabName, isAp
         var qcDateValues = listToReport.getRange(2, qcDateColumn, rowsCount).getValues()
         var checkedByValues = listToReport.getRange(2, checkedByColumn, rowsCount).getValues();
 
-        var currentDate = dayToScript;
         sortCheckers(qcDateValues, qcValues, checkedByValues, qcValuesbgColors);
         var arrCheckers = [], arrChekerStrikes = [], arrChekerStrikesString = [], arrComments = []
-        countCheckers(ID, qcDateValues, qcValues, checkedByValues, qcValuesbgColors, currentDate,
+        countCheckers(ID, qcDateValues, qcValues, checkedByValues, qcValuesbgColors, dayToScript,
             arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments);
         if (arrCheckers.length == 0) { Browser.msgBox("Nothing to report"); return 0; }
-        var dateFromRecievedList = getDateFromRecievedLists(listLink)
-        if (!dateFromRecievedList) { Browser.msgBox("Missing in Recieved Lists"); return; }
-        var temp = dateFromRecievedList.split('.');
-        var outPutDate = new Date(temp[0] + '/' + temp[1] + '/' + temp[2]);
+        //var dateFromRecievedList = getDateFromRecievedLists(listLink)
+        //if (!dateFromRecievedList) { Browser.msgBox("Missing in Recieved Lists"); return; }
+        //var temp = dateFromRecievedList.split('.');
+        //var outPutDate = new Date(temp[0] + '/' + temp[1] + '/' + temp[2]);
+        var outPutDate = "";
+        if (isAppend) appendRows(QCInfo, listLink, listType,
+            arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, dayToScript, QCTabName,lvDate)
+        else appendRowsUpdating(listLink, listType,
+            arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, dayToScript, QCTabName)
+        
     }
     catch (err) { Browser.msgBox("Error from reportList " + err) }
-    if (isAppend) appendRows (QCInfo, listLink, listType,
-        arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, currentDate, QCTabName)
-    else appendRowsUpdating(listLink, listType,
-        arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, currentDate, QCTabName)
-    Browser.msgBox("Report finished");
+
 }
-function appendRows (qc_info, listLink, listType,
-    arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, currentDate, QCTabName)
-{
-try {
-     var TeamQualityReportLink = "https://docs.google.com/spreadsheets/d/1R6_o3_3nDv_1_zxgSRPFztTBn-mEyBztFeT5_3KcY_w/edit#gid=1812332991";
-       var TeamQualityReport = SpreadsheetApp.openByUrl(TeamQualityReportLink).getSheetByName(QCTabName);
-     
-      // Browser.msgBox(lastRow)
-      
-      var checkersID = qc_info.getRange(4, 6, qc_info.getLastRow()).getValues();
-      var checkersNames = qc_info.getRange(4, 7, qc_info.getLastRow()).getValues();
+function appendRows(qc_info, listLink, listType,
+    arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, dayToScript, QCTabName, lvDate) {
+    try {
+        var TeamQualityReportLink = "https://docs.google.com/spreadsheets/d/1R6_o3_3nDv_1_zxgSRPFztTBn-mEyBztFeT5_3KcY_w/edit#gid=1812332991";
+        var TeamQualityReport = SpreadsheetApp.openByUrl(TeamQualityReportLink).getSheetByName(QCTabName);
+
+        // Browser.msgBox(lastRow)
+
+        var checkersID = qc_info.getRange(4, 6, qc_info.getLastRow()).getValues();
+        var checkersNames = qc_info.getRange(4, 7, qc_info.getLastRow()).getValues();
         for (i in checkersID) checkersID[i] = Number(checkersID[i]);
-      var dateFromRL = getDateFromRecievedLists(listLink);
-      var ReportSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Reported");
-      ReportSheet.clearContents();
-      var lastRow = ReportSheet.getLastRow();
-      var rangeToUpdate = ReportSheet.getRange(2,1,arrCheckers.length, 10);
-      ReportSheet.getRange(1,2).setValue(QCTabName);
+      //  var dateFromRL = "";
+        //getDateFromRecievedLists(listLink);
+        var ReportSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Reported");
+        ReportSheet.clearContents();
+        var lastRow = ReportSheet.getLastRow();
+        var rangeToUpdate = ReportSheet.getRange(2, 1, arrCheckers.length, 10);
+        ReportSheet.getRange(1, 2).setValue(QCTabName);
         //var rangeToUpdate = TeamQualityReport.getRange(lastRow, 1, arrCheckers.length, 10);
         var valuesUpdate = rangeToUpdate.getValues();
         var count = 0;
+        lvDate = new Date (lvDate)
         for (var i = 0; i < arrCheckers.length; i++) {
+            try{
             if (!arrCheckers[i]) continue;
             var indexChecker = checkersID.indexOf(Number(arrCheckers[i]));
-            if (indexChecker == -1) continue;
-            var nameChecker = checkersNames[indexChecker];
+            if (indexChecker == -1) var nameChecker = arrCheckers[i] + " - NOT FOUND"
+            else var nameChecker = checkersNames[indexChecker];
             // Browser.msgBox(nameChecker);
-            valuesUpdate[count][0] = currentDate;
-            valuesUpdate[count][1] = dateFromRL;
+            valuesUpdate[count][0] = dayToScript;
+            valuesUpdate[count][1] = lvDate
             valuesUpdate[count][2] = nameChecker;
             valuesUpdate[count][3] = SpreadsheetApp.openByUrl(listLink).getName();
             valuesUpdate[count][4] = listLink;
@@ -131,17 +138,22 @@ try {
             valuesUpdate[count][8] = arrComments[i] + arrChekerStrikes[i];
             valuesUpdate[count][9] = arrChekerStrikes[i];
             count++;
+            }catch (err) {Browser.msgBox("err 3.0 " + err)}
         }
+
+
         rangeToUpdate.setValues(valuesUpdate);
-        }        catch (err) { Browser.msgBox(err)}
-} 
-    
-    
-    
+
+
+    } catch (err) { Browser.msgBox(err) }
+}
+
+
+
 function appendRowsUpdating(listLink, listType,
     arrCheckers, arrChekerStrikes, arrChekerStrikesString, arrComments, outPutDate, currentDate, QCTabName) {
     try {
-         Browser.msgBox("Будет очень долго............................. ")
+        Browser.msgBox("Будет очень долго............................. ")
         //Browser.msgBox("Append Rows");
         var TeamQualityReportLink = "https://docs.google.com/spreadsheets/d/1R6_o3_3nDv_1_zxgSRPFztTBn-mEyBztFeT5_3KcY_w/edit#gid=1812332991";
         var TeamQualityReport = SpreadsheetApp.openByUrl(TeamQualityReportLink).getSheetByName(QCTabName);
@@ -157,7 +169,7 @@ function appendRowsUpdating(listLink, listType,
         while (countNotEmptyRows < lastRowIndex) {
             if (links[countNotEmptyRows][0].indexOf(curListId) != -1) {
                 //Browser.msgBox("already reported" + countNotEmptyRows)
-                if (compareDates(new Date(currentDate), new Date( dates[countNotEmptyRows][0] ))) {
+                if (compareDates(new Date(currentDate), new Date(dates[countNotEmptyRows][0]))) {
                     var checkerName = TeamQualityReport.getRange(6 + countNotEmptyRows, 3).getValue();
                     checker = checkerName.split(' ')[0];
                     var index = arrCheckers.indexOf(Number(checker));
@@ -176,7 +188,8 @@ function appendRowsUpdating(listLink, listType,
             else break;
         }
         //Browser.msgBox("after while");
-        var dateFromRL = getDateFromRecievedLists(listLink);
+        //var dateFromRL = "";
+        // getDateFromRecievedLists(listLink);
         var operTab = SpreadsheetApp.openByUrl(TeamQualityReportLink).getSheetByName("Oper_Tab");
         var checkersID = operTab.getRange(5, 4, operTab.getLastRow()).getValues();
         var checkersNames = operTab.getRange(5, 11, operTab.getLastRow()).getValues();
@@ -191,7 +204,7 @@ function appendRowsUpdating(listLink, listType,
             var nameChecker = checkersNames[indexChecker];
             // Browser.msgBox(nameChecker);
             valuesUpdate[count][0] = currentDate;
-            valuesUpdate[count][1] = dateFromRL;
+            valuesUpdate[count][1] = ""
             valuesUpdate[count][2] = nameChecker;
             valuesUpdate[count][3] = SpreadsheetApp.openByUrl(listLink).getName();
             valuesUpdate[count][4] = listLink;
@@ -267,7 +280,7 @@ function countCheckers(ID, qcDateValues, qcValues, checkedByValues, qcValuesbgCo
                         curStrikesString += qcValues[currentRowIndex][0].toString().replace(ID + " ", "") + "; ";
                     }
 
-                    else  {
+                    else {
                         curCountV++;
                     }
                 }

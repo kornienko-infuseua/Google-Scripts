@@ -148,7 +148,7 @@ function ifListChecked(link) {
         for (var row = 0; row < ovCommentRows.length; row++)
             if (ovCommentRows[row] == "") return false;
         return true;
-    } catch (err) { return false; }
+    } catch (err) { return "No permissions"; }
 }
 function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWholeMonth, checkRejectionRate) {
 
@@ -239,7 +239,7 @@ function useScript(dateToScript, DaySelected, MonthSelected, YearSelected, isWho
 
 
     else Browser.msgBox(nameOfSheet + " is missing");
-    if (!isWholeMonth) Browser.msgBox("Script is Done");
+    //if (!isWholeMonth) Browser.msgBox("Script is Done");
 }
 function getRowsToScript(data, isWholeMonth, dateToScript) {
     var masRows = []
@@ -307,22 +307,27 @@ function getRejectionRate(link, date) {
         }
         var countsGreenAndOthers = getRejCounts(curSheet, titleColumn);
         var RejTitlesGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var RejTitlesYellow = countsGreenAndOthers ? countsGreenAndOthers[1] : 0;
         var countRejTitlesGreen = getpercent(countsGreenAndOthers, 0), countRejTitlesYellow = getpercent(countsGreenAndOthers, 1);
 
         countsGreenAndOthers = getRejCounts(curSheet, countryColumn);
         var rejCountryGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var rejCountryYellow = countsGreenAndOthers ? countsGreenAndOthers[1] : 0;
         var countRejCountryGreen = getpercent(countsGreenAndOthers, 0), countRejCountryYellow = getpercent(countsGreenAndOthers, 1)
 
         countsGreenAndOthers = getRejCounts(curSheet, industryColumn);
         var rejIndustryGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var rejIndustryYellow = countsGreenAndOthers ? countsGreenAndOthers[1] : 0;
         var countRejIndustryGreen = getpercent(countsGreenAndOthers, 0), countRejIndustryYellow = getpercent(countsGreenAndOthers, 1)
 
         countsGreenAndOthers = getRejCounts(curSheet, employeesColumn);
         var rejEmployeesGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var rejEmployeesYellow = countsGreenAndOthers ? countsGreenAndOthers[1] : 0;
         var countRejEmployeesGreen = getpercent(countsGreenAndOthers, 0), countRejEmployeesYellow = getpercent(countsGreenAndOthers, 1)
 
         countsGreenAndOthers = getRejCounts(curSheet, revenueColumn);
         var rejRevenueGreen = countsGreenAndOthers ? countsGreenAndOthers[0] : 0;
+        var rejRevenueYellow = countsGreenAndOthers ? countsGreenAndOthers[1] : 0;
         var countRejRevenueGreen = getpercent(countsGreenAndOthers, 0), countRejRevenueYellow = getpercent(countsGreenAndOthers, 1)
 
         var rejNac = getRejNac(curSheet, companyColumn);
@@ -333,7 +338,7 @@ function getRejectionRate(link, date) {
         var dateScriptRun = generateCurrentDate()
 
         var lastCellDate = rejSheet.getRange(rejSheet.getLastRow(), 1);
-        rejSheet.appendRow([dateScriptRun, date, sh.getName(), link, countRejTitlesGreen + '%', RejTitlesGreen, countRejTitlesYellow + '%', countRejCountryGreen + '%', rejCountryGreen, countRejCountryYellow + '%', countRejIndustryGreen + '%', rejIndustryGreen, countRejIndustryYellow + '%', countRejEmployeesGreen + '%', rejEmployeesGreen, countRejEmployeesYellow + '%', countRejRevenueGreen + '%', rejRevenueGreen, countRejRevenueYellow + '%', countRejNAC + '%', rejNac, countChecked])
+        rejSheet.appendRow([dateScriptRun, date, sh.getName(), link, countRejTitlesGreen + '%', RejTitlesGreen, countRejTitlesYellow + '%',RejTitlesYellow, countRejCountryGreen + '%', rejCountryGreen, countRejCountryYellow + '%', rejCountryYellow, countRejIndustryGreen + '%', rejIndustryGreen, countRejIndustryYellow + '%', rejIndustryYellow, countRejEmployeesGreen + '%', rejEmployeesGreen, countRejEmployeesYellow + '%',rejEmployeesYellow, countRejRevenueGreen + '%', rejRevenueGreen, countRejRevenueYellow + '%',rejRevenueYellow, countRejNAC + '%', rejNac, countChecked])
 
 
         setBackground(rejSheet, dateScriptRun, lastCellDate)

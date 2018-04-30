@@ -13,11 +13,11 @@ function onOpen() {
 }
 
 //function onEdit(e) {
-    //var ss = SpreadsheetApp.getActiveSpreadsheet();
-    //var currentSheet = ss.getActiveSheet();
-   // var nameOfSheet = currentSheet.getName();
-    //var upd = e.range.getValue();
-    //if (upd && nameOfSheet == "Leads errors") 
+//var ss = SpreadsheetApp.getActiveSpreadsheet();
+//var currentSheet = ss.getActiveSheet();
+// var nameOfSheet = currentSheet.getName();
+//var upd = e.range.getValue();
+//if (upd && nameOfSheet == "Leads errors") 
 //}
 function fromHtml() {
 
@@ -57,28 +57,20 @@ function processRowsFromFile(rows) {
                     curSheet = SpreadsheetApp.openByUrl(link).getSheets()[0];
                 } catch (err) { continue }
             }
-            //errorInfo.domain = getDomain(curSheet, errorInfo.row)
-            //Browser.msgBox("error type" + errorInfo.errorType)
+
             if (errorInfo.errorType == 3) {
                 var leadInfo = getLeadInfo(curSheet, errorInfo.row);
-                /*  Browser.msgBox(leadInfo.first_name)
-                 Browser.msgBox(leadInfo.last_name)
-                 Browser.msgBox(leadInfo.companyName)
-                 Browser.msgBox(leadInfo.prooflink)
-                 Browser.msgBox(leadInfo.email) */
-                LeadsArray.push([currentDate, errorInfo.date, errorInfo.errorMessage, leadInfo.first_name, leadInfo.last_name, leadInfo.companyName, leadInfo.email, leadInfo.prooflink, errorInfo.row, errorInfo.link])
-                //sheetToAppendLead.appendRow([currentDate,errorInfo.date,errorInfo.errorMessage,leadInfo.first_name,leadInfo.last_name,leadInfo.companyName,leadInfo.email,leadInfo.prooflink,errorInfo.row,errorInfo.link])
+
+                if (leadInfo != false)
+                    LeadsArray.push([currentDate, errorInfo.date, errorInfo.errorMessage, leadInfo.first_name, leadInfo.last_name, leadInfo.companyName, leadInfo.email, leadInfo.prooflink, errorInfo.row, errorInfo.link])
             }
             else if (errorInfo.errorType == 4) {
                 CountriesArray.push([currentDate, errorInfo.date, errorInfo.errorMessage, errorInfo.countryName, errorInfo.row, errorInfo.link])
-                //Browser.msgBox(CountriesArray);
-                //sheetToAppendCountry.appendRow([currentDate,errorInfo.date,errorInfo.errorMessage,errorInfo.countryName,errorInfo.row,errorInfo.link])
+
             }
             else {
                 var compInfo = getCompanyInfo(curSheet, errorInfo.row, errorInfo.errorType)
-                CompaniesArray.push([currentDate, errorInfo.date, errorInfo.errorMessage, errorInfo.oldName ? errorInfo.oldName : compInfo.companyName, errorInfo.newName ? errorInfo.newName : "", compInfo.domain, errorInfo.row, errorInfo.link, compInfo.columnProoflink ? compInfo.columnProoflink : "", compInfo.columnValue ? compInfo.columnValue : "", compInfo.prooflink])
-                //Browser.msgBox(errorInfo.date + ' ' + errorInfo.link + ' ' + errorInfo.row + ' ' + errorInfo.oldName + ' ' + errorInfo.newName + ' ' + errorInfo.domain)
-                //sheetToAppendCompany.appendRow([currentDate, errorInfo.date, errorInfo.errorMessage, errorInfo.oldName ? errorInfo.oldName : compInfo.companyName, errorInfo.newName ? errorInfo.newName : "", compInfo.domain, errorInfo.row, errorInfo.link, compInfo.columnProoflink ? compInfo.columnProoflink : "", compInfo.columnValue ? compInfo.columnValue : "", compInfo.prooflink])
+                CompaniesArray.push([errorInfo.date, errorInfo.errorMessage, errorInfo.oldName ? errorInfo.oldName : compInfo.companyName, errorInfo.newName ? errorInfo.newName : "", compInfo.domain, errorInfo.row, errorInfo.link, compInfo.EmployeesProoflink ? compInfo.EmployeesProoflink : "", compInfo.Employees ? compInfo.Employees : "", compInfo.RevenueProoflink ? compInfo.RevenueProoflink : "", compInfo.Revenue ? compInfo.Revenue : "", compInfo.prooflink])
 
             }
 
@@ -86,15 +78,24 @@ function processRowsFromFile(rows) {
     }
 
 
-    sheetToAppendCompany.getRange(sheetToAppendCompany.getLastRow() + 1, 1, CompaniesArray.length, CompaniesArray[0].length).setValues(CompaniesArray);
-    sheetToAppendLead.getRange(sheetToAppendLead.getLastRow() + 1, 1, LeadsArray.length, LeadsArray[0].length).setValues(LeadsArray);
-    sheetToAppendCountry.getRange(sheetToAppendCountry.getLastRow() + 1, 1, CountriesArray.length, CountriesArray[0].length).setValues(CountriesArray);
+    try {
+        if (CompaniesArray.length > 0) sheetToAppendCompany.getRange(sheetToAppendCompany.getLastRow() + 1, 1, CompaniesArray.length, CompaniesArray[0].length).setValues(CompaniesArray);
+        if (LeadsArray.length > 0) sheetToAppendLead.getRange(sheetToAppendLead.getLastRow() + 1, 1, LeadsArray.length, LeadsArray[0].length).setValues(LeadsArray);
+        if (CountriesArray.length > 0) sheetToAppendCountry.getRange(sheetToAppendCountry.getLastRow() + 1, 1, CountriesArray.length, CountriesArray[0].length).setValues(CountriesArray);
+    } catch (err) { Browser.msgBox(err) }
+
 
 }
 function getLeadInfo(curSheet, row) {
     try {
         var LeadInfo = {};
         var columns = curSheet.getRange(1, 1, 1, curSheet.getLastColumn()).getValues();
+
+        var PvColumn = columns[0].indexOf("pv_comment") + 1;
+        if (PvColumn > 0) {
+            var pvComment = curSheet.getRange(row, PvColumn).getValue();
+            if (pvComment.indexOf("NWC") != -1) { return false; }
+        }
         var CompanyColumn = columns[0].indexOf("company") + 1;
         if (CompanyColumn == 0) return false;
         LeadInfo.companyName = curSheet.getRange(row, CompanyColumn).getValue();
@@ -156,7 +157,7 @@ function getErrorInfo(str) {
             info.errorMessage = "Country not found";
             info.errorType = 4; // 4 - countrry not found
             //var countryPos = columnsArr[2].search('Country not found');
-            info.countryName = columnsArr[2].substring(19, columnsArr[2].length - 1)
+            info.countryName = columnsArr[2].substring(20, columnsArr[2].length )
         }
         else { return 0; }
         info.date = columnsArr[0];
@@ -186,11 +187,36 @@ function getCompanyInfo(curSheet, row, changedType) {
             var columnValue = columns[0].indexOf(columnValueName) + 1;
             var columnProoflink = columns[0].indexOf(columnProoflinkName) + 1;
 
-            if (columnProoflink && curSheet.getRange(row, columnProoflink).getBackground() == '#ffff00')
-                compInfo.columnProoflink = curSheet.getRange(row, columnProoflink).getValue();
-            if (columnValue && curSheet.getRange(row, columnValue).getBackground() == '#ffff00')
-                compInfo.columnValue = curSheet.getRange(row, columnValue).getValue();
 
+            if (columnProoflink && curSheet.getRange(row, columnProoflink).getBackground() == '#ffff00') {
+                if (changedType == 1)
+                    compInfo.EmployeesProoflink = curSheet.getRange(row, columnProoflink).getValue();
+                else compInfo.RevenueProoflink = curSheet.getRange(row, columnProoflink).getValue();
+            }
+            if (columnValue && curSheet.getRange(row, columnValue).getBackground() == '#ffff00') {
+                if (changedType == 1)
+                    compInfo.Employees = curSheet.getRange(row, columnValue).getValue();
+                else compInfo.Revenue = curSheet.getRange(row, columnValue).getValue();
+            }
+        }
+        else { // нужно переделать, г**код
+            var columnValueEmployees = columns[0].indexOf("employees") + 1;
+            var columnEmployeeesProoflink = columns[0].indexOf("employees_prooflink") + 1;
+            var columnValueRevenue = columns[0].indexOf("revenue") + 1;
+            var columnRevenueProoflink = columns[0].indexOf("revenue_prooflink") + 1;
+
+            if (columnValueEmployees && curSheet.getRange(row, columnValueEmployees).getBackground() == '#ffff00') {
+                compInfo.Employees = curSheet.getRange(row, columnValueEmployees).getValue();
+            }
+            if (columnEmployeeesProoflink && curSheet.getRange(row, columnEmployeeesProoflink).getBackground() == '#ffff00') {
+                compInfo.EmployeesProoflink = curSheet.getRange(row, columnEmployeeesProoflink).getValue();
+            }
+            if (columnValueRevenue && curSheet.getRange(row, columnValueRevenue).getBackground() == '#ffff00') {
+                compInfo.Revenue = curSheet.getRange(row, columnValueRevenue).getValue();
+            }
+            if (columnRevenueProoflink && curSheet.getRange(row, columnRevenueProoflink).getBackground() == '#ffff00') {
+                compInfo.RevenueProoflink = curSheet.getRange(row, columnRevenueProoflink).getValue();
+            }
         }
         var emailColumn = columns[0].indexOf("email") + 1;
         if (emailColumn == 0) return false;
