@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <style>
+        body{
+            text-align: center;
+        }
+        label {
+            font-style: italic;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        input[type='checkbox']{
+            width: 20px;
+            height: 20px;
+        }
+        input:hover,
+        select:hover,
+        button:hover {
+            background-color: #E8F5FF;
+            cursor: pointer;
+        }
+
+
+        .button {
+            margin: 15px auto;
+
+            display: block;
+            position: relative;
+            border: 1px solid black;
+            font-size: 18px;
+            font-weight: 600;
+            width: 80px;
+            height: 25px;
+            /* background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px; */
+        }
+    </style>
+</head>
+
+<body>
+
+    <p>
+
+        <!-- <select id="SelectDay"> </select>
+        <select id="SelectMonth"> </select>
+        <select id="SelectYear"> </select> -->
+        <p>
+            <label for="datePick">Select date</label>
+        </p>
+        <input id="datePick" type="date">
+        <p>
+            <p>
+                <input type="checkbox" id="checkBoxWholeMonth" name="WholeMonth" value="SelectWholeMonth" onchange="disable()"> Whole Month from Selected Sheet </p>
+            <p>
+                <input type="checkbox" id="checkRejectionRate" name="RejectionRate" value="CheckRejectionRate?" checked="true"> Check rejection rate </p>
+
+            <button class="button" id="ok" onclick="OkButton()">Start</button>
+        </p>
+
+        <script>
+            document.getElementById('datePick').valueAsDate = new Date();
+            // var select = document.getElementById("SelectDay");
+            /*  var x = document.getElementById("SelectDay");
+             for (var i = 1; i <= 31; i++) {
+                 var option = document.createElement("option");
+                 option.text = i;
+                 option.value = i > 9 ? i : '0' + i;
+                 option.id = "d" + i;
+                 x.add(option);
+             }
+             var x = document.getElementById("SelectMonth");
+             var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+             for (var i = 1; i <= 12; i++) {
+                 var option = document.createElement("option");
+                 option.text = months[i - 1];
+                 option.value = i > 12 ? i : '0' + i;
+                 option.id = "m" + i;
+                 x.add(option);
+ 
+             }
+             var x = document.getElementById("SelectYear");
+             var years = ["2016", "2017", "2018", "2019", "2020"];
+             for (var i = 0; i < years.length; i++) {
+                 var option = document.createElement("option");
+                 option.text = years[i];
+                 option.value = years[i];
+                 option.id = "y" + years[i];
+                 x.add(option);
+             } */
+            /*  var currentDate = new Date();
+             var currentDay = currentDate.getDate();
+             var currentMonth = currentDate.getMonth();
+             var currentYear = currentDate.getFullYear();
+             var m = document.getElementById('m' + (currentMonth + 1));
+             m.selected = true;
+             var d = document.getElementById('d' + currentDay);
+             d.selected = true;
+             var y = document.getElementById('y' + currentYear);
+             y.selected = true;
+  */
+            function disable() {
+                if ($("#datePick").attr("disabled") == "disabled") {
+                    $("#datePick").removeAttr("disabled", "disabled");
+                   
+
+                } else {
+                    $("#datePick").attr("disabled", "disabled");
+                   
+                }
+            }
+            function getMonthOrDayFormattedValue(value) {
+                if (value < 10) return '0' + value
+                return value;
+            }
+            function OkButton() {
+                // Browser.msgBox("fdsfs");
+                //var day = document.getElementById("SelectDay");
+                // var DaySelected = day.options[day.selectedIndex].value;
+                //alert ('first day: ' + DaySelected)
+                // var month = document.getElementById("SelectMonth");
+                // var MonthSelected = month.options[month.selectedIndex].value;
+                // alert ('first month: ' + MonthSelected)
+                //   var year = document.getElementById("SelectYear");
+                //  var YearSelected = year.options[year.selectedIndex].value;
+                //alert ('year month: ' + YearSelected)
+
+                // alert( DaySelected);
+                // alert(dateToScript);
+                var isWholeMonth = document.getElementById("checkBoxWholeMonth").checked;
+                var checkRejectionRate = document.getElementById("checkRejectionRate").checked
+                var datePick = new Date(document.getElementById('datePick').value)
+                //var m = newD.getMonth()
+                var month = parseInt(datePick.getMonth()) + 1
+                month = getMonthOrDayFormattedValue(month)
+                var day = getMonthOrDayFormattedValue(datePick.getDate())
+                var year = datePick.getFullYear()
+
+                var dateToScript = month + "." + day + "." + year;
+                google.script.run.useScript(dateToScript, isWholeMonth, checkRejectionRate);
+                google.script.host.close();
+
+            }
+        </script>
+</body>
+
+</html>
